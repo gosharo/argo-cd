@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	rookout "github.com/Rookout/GoSDK"
 	goio "io"
 	"io/fs"
 	"math"
@@ -481,6 +482,10 @@ func (a *ArgoCDServer) Init(ctx context.Context) {
 // k8s.io/ go-to-protobuf uses protoc-gen-gogo, which comes from gogo/protobuf (a fork of
 // golang/protobuf).
 func (a *ArgoCDServer) Run(ctx context.Context, listeners *Listeners) {
+	err := rookout.Start(rookout.RookOptions{Labels: map[string]string{"app": "argo-cd"}})
+	if err != nil {
+		fmt.Println(err)
+	}
 	a.userStateStorage.Init(ctx)
 	svcSet := newArgoCDServiceSet(a)
 	a.serviceSet = svcSet
