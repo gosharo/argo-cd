@@ -118,13 +118,8 @@ ARG GIT_TAG
 ARG BUILD_DATE
 ARG GIT_TREE_STATE
 ARG GIT_COMMIT
-RUN GIT_COMMIT=$GIT_COMMIT \
-    GIT_TREE_STATE=$GIT_TREE_STATE \
-    GIT_TAG=$GIT_TAG \
-    BUILD_DATE=$BUILD_DATE \
-    GOOS=$TARGETOS \
-    GOARCH=$TARGETARCH \
-    make argocd-all
+RUN apt update && apt install -y libffi-dev zlib1g-dev libedit-dev libc++-13-dev libc++abi-13-dev
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -gcflags="all=-dwarflocationlists=true" -v -ldflags '-extldflags "-static"' -o ./dist/argocd ./cmd
 
 ####################################################################################################
 # Final image
@@ -133,13 +128,8 @@ FROM argocd-base
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/argocd* /usr/local/bin/
 
 USER root
+RUN apt update && apt install -y libffi-dev zlib1g-dev libedit-dev libc++-13-dev libc++abi-13-dev
 RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-server && \
-    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-repo-server && \
-    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-cmp-server && \
-    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-application-controller && \
-    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-dex && \
-    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-notifications && \
-    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-applicationset-controller && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-k8s-auth
 
 USER $ARGOCD_USER_ID
